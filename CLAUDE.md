@@ -173,3 +173,8 @@ GitHub Actions workflow (`ci-cd.yml`) performs:
 1. On every push: Build and run tests
 2. On merge to main: Build Docker image and push to Docker Hub
 3. Tagged releases trigger production deployments
+
+## Development Guidance
+
+- Always commit and push frequently whenever you reach a good state
+- Always keep a log of you tasks progress at spec/tasks. that should also be committed

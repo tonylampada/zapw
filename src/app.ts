@@ -1,6 +1,8 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { sessionsController } from './controllers/sessionsController';
+import { errorHandler } from './middleware/errorHandler';
 
 export const createApp = (): Application => {
   const app = express();
@@ -20,14 +22,11 @@ export const createApp = (): Application => {
     });
   });
 
+  // Routes
+  app.use('/sessions', sessionsController);
+
   // Error handling middleware
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
-    });
-  });
+  app.use(errorHandler);
 
   return app;
 };
