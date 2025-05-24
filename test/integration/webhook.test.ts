@@ -1,6 +1,19 @@
 import request from 'supertest';
 import express from 'express';
 
+// Mock persistence adapter before importing app
+jest.mock('../../src/adapters/persistenceAdapter', () => ({
+  persistenceAdapter: {
+    initialize: jest.fn().mockResolvedValue(undefined),
+    saveSessionMetadata: jest.fn().mockResolvedValue(undefined),
+    removeSessionMetadata: jest.fn().mockResolvedValue(undefined),
+    deleteSessionAuth: jest.fn().mockResolvedValue(undefined),
+    getAllSessions: jest.fn().mockResolvedValue([]),
+    sessionAuthExists: jest.fn().mockResolvedValue(false)
+  },
+  SessionData: {}
+}));
+
 describe('Webhook Integration', () => {
   let app: express.Application;
   let webhookServer: any;
@@ -45,10 +58,15 @@ describe('Webhook Integration', () => {
     }
   });
   
-  beforeEach(() => {
+  beforeEach(async () => {
     webhookReceived = [];
     process.env.WEBHOOK_URL = `http://localhost:${webhookPort}/webhook`;
     process.env.ENABLE_WEBHOOK = 'true';
+    
+    // Initialize session manager if not already initialized
+    if (!sessionManager['persistenceAdapter']) {
+      await sessionManager.initialize();
+    }
     
     // Clear any existing sessions
     sessionManager['sessions'].clear();

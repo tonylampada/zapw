@@ -14,6 +14,22 @@ export class WhatsAppService {
     this.useMock = useMock;
   }
 
+  async initialize(): Promise<void> {
+    // Restore WhatsApp connections for persisted sessions
+    const sessions = sessionManager.getAllSessions();
+    
+    for (const session of sessions) {
+      if (session.status === 'disconnected') {
+        try {
+          console.log(`Attempting to restore WhatsApp connection for ${session.id}`);
+          await this.initializeSession(session.id);
+        } catch (error) {
+          console.error(`Failed to restore session ${session.id}:`, error);
+        }
+      }
+    }
+  }
+
   async initializeSession(sessionId: string): Promise<void> {
     const session = sessionManager.getSession(sessionId);
     if (!session) {
@@ -37,12 +53,12 @@ export class WhatsAppService {
       sessionManager.updateSession(sessionId, {
         qrCode: qr,
         status: 'qr_waiting'
-      });
+      }).catch(err => console.error('Failed to update session:', err));
     });
 
     client.onConnected(async (info) => {
       console.log(`Session ${sessionId} connected: ${info.phoneNumber}`);
-      sessionManager.updateSession(sessionId, {
+      await sessionManager.updateSession(sessionId, {
         phoneNumber: info.phoneNumber,
         name: info.name,
         status: 'connected',
@@ -62,7 +78,7 @@ export class WhatsAppService {
 
     client.onDisconnected(async (reason) => {
       console.log(`Session ${sessionId} disconnected:`, reason);
-      sessionManager.updateSession(sessionId, {
+      await sessionManager.updateSession(sessionId, {
         status: 'disconnected'
       });
       
@@ -123,6 +139,11 @@ export class WhatsAppService {
     });
 
     try {
+      // Update session status during initialization
+      await sessionManager.updateSession(sessionId, {
+        status: 'connecting'
+      });
+      
       await client.connect();
       this.clients.set(sessionId, client);
     } catch (error) {

@@ -1,6 +1,6 @@
 export interface Session {
   id: string;
-  status: 'initializing' | 'qr_waiting' | 'connected' | 'disconnected';
+  status: 'initializing' | 'connecting' | 'qr_waiting' | 'connected' | 'disconnected';
   phoneNumber?: string;
   name?: string;
   createdAt: Date;

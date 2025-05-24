@@ -23,7 +23,7 @@ function mapSessionToResponse(session: Session): SessionResponse {
 router.post('/', async (req: Request<{}, {}, CreateSessionRequest>, res: Response): Promise<void> => {
   try {
     const { sessionId } = req.body;
-    const session = sessionManager.createSession(sessionId);
+    const session = await sessionManager.createSession(sessionId);
     
     // Start WhatsApp connection
     whatsappService.initializeSession(session.id)
@@ -92,7 +92,7 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     // Terminate WhatsApp connection first
     await whatsappService.terminateSession(req.params.id);
     
-    const deleted = sessionManager.deleteSession(req.params.id);
+    const deleted = await sessionManager.deleteSession(req.params.id);
     if (!deleted) {
       res.status(404).json({
         error: 'Session Not Found',

@@ -3,6 +3,19 @@ import { createApp } from '../../src/app';
 import { sessionManager } from '../../src/services/sessionManager';
 import { whatsappService } from '../../src/services/whatsappService';
 
+// Mock persistence adapter
+jest.mock('../../src/adapters/persistenceAdapter', () => ({
+  persistenceAdapter: {
+    initialize: jest.fn().mockResolvedValue(undefined),
+    saveSessionMetadata: jest.fn().mockResolvedValue(undefined),
+    removeSessionMetadata: jest.fn().mockResolvedValue(undefined),
+    deleteSessionAuth: jest.fn().mockResolvedValue(undefined),
+    getAllSessions: jest.fn().mockResolvedValue([]),
+    sessionAuthExists: jest.fn().mockResolvedValue(false)
+  },
+  SessionData: {}
+}));
+
 // Mock WhatsApp service
 jest.mock('../../src/services/whatsappService', () => {
   const { SessionNotFoundError } = require('../../src/models/errors');
@@ -29,16 +42,19 @@ describe('Messages API', () => {
   let sessionId: string;
   
   beforeEach(async () => {
+    // Initialize session manager
+    await sessionManager.initialize();
+    
     // Clear all sessions and mocks
     sessionManager.clear();
     jest.clearAllMocks();
     
     // Create and mock a connected session
-    const session = sessionManager.createSession('test-session');
+    const session = await sessionManager.createSession('test-session');
     sessionId = session.id;
     
     // Mock session as connected
-    sessionManager.updateSession(sessionId, {
+    await sessionManager.updateSession(sessionId, {
       status: 'connected',
       phoneNumber: '1234567890'
     });
