@@ -1,6 +1,15 @@
 import request from 'supertest';
 import { createApp } from '../../src/app';
 import { sessionManager } from '../../src/services/sessionManager';
+import { whatsappService } from '../../src/services/whatsappService';
+
+// Mock WhatsApp service
+jest.mock('../../src/services/whatsappService', () => ({
+  whatsappService: {
+    initializeSession: jest.fn().mockResolvedValue(undefined),
+    terminateSession: jest.fn().mockResolvedValue(undefined)
+  }
+}));
 
 describe('Sessions API', () => {
   const app = createApp();
@@ -8,6 +17,8 @@ describe('Sessions API', () => {
   beforeEach(() => {
     // Clear all sessions before each test
     sessionManager.clear();
+    // Clear mock calls
+    jest.clearAllMocks();
   });
 
   describe('POST /sessions', () => {
@@ -45,6 +56,15 @@ describe('Sessions API', () => {
       expect(response.status).toBe(409);
       expect(response.body.error).toBe('Session Already Exists');
       expect(response.body.message).toContain('duplicate-123');
+    });
+
+    it('should initialize WhatsApp connection', async () => {
+      const response = await request(app)
+        .post('/sessions')
+        .send({ sessionId: 'test-whatsapp' });
+
+      expect(response.status).toBe(201);
+      expect(whatsappService.initializeSession).toHaveBeenCalledWith('test-whatsapp');
     });
   });
 
@@ -98,6 +118,9 @@ describe('Sessions API', () => {
       const deleteResponse = await request(app).delete('/sessions/to-delete');
       expect(deleteResponse.status).toBe(204);
       expect(deleteResponse.body).toEqual({});
+
+      // Verify WhatsApp termination was called
+      expect(whatsappService.terminateSession).toHaveBeenCalledWith('to-delete');
 
       // Verify session is deleted
       const getResponse = await request(app).get('/sessions/to-delete');

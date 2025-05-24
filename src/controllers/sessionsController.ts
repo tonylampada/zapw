@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { sessionManager } from '../services/sessionManager';
+import { whatsappService } from '../services/whatsappService';
 import { SessionAlreadyExistsError } from '../models/errors';
 import { CreateSessionRequest, SessionResponse } from '../models/api';
 import { Session } from '../models/Session';
@@ -23,6 +24,11 @@ router.post('/', async (req: Request<{}, {}, CreateSessionRequest>, res: Respons
   try {
     const { sessionId } = req.body;
     const session = sessionManager.createSession(sessionId);
+    
+    // Start WhatsApp connection
+    whatsappService.initializeSession(session.id)
+      .catch(err => console.error('Failed to initialize WhatsApp:', err));
+    
     res.status(201).json(mapSessionToResponse(session));
   } catch (error) {
     if (error instanceof SessionAlreadyExistsError) {
@@ -83,6 +89,9 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 // DELETE /sessions/:id - Delete session
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
+    // Terminate WhatsApp connection first
+    await whatsappService.terminateSession(req.params.id);
+    
     const deleted = sessionManager.deleteSession(req.params.id);
     if (!deleted) {
       res.status(404).json({

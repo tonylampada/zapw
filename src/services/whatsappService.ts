@@ -1,6 +1,7 @@
 import { sessionManager } from './sessionManager';
 import { IWhatsAppClient, BaileysClient, MockWhatsAppClient } from '../adapters/whatsappAdapter';
 import { SessionNotFoundError } from '../models/errors';
+import { printQRToConsole } from '../utils/qrUtil';
 
 export class WhatsAppService {
   private clients: Map<string, IWhatsAppClient> = new Map();
@@ -24,6 +25,12 @@ export class WhatsAppService {
     // Set up event handlers
     client.onQR((qr) => {
       console.log(`QR code received for session ${sessionId}`);
+      
+      // Print QR to console in development
+      if (process.env.NODE_ENV === 'development') {
+        printQRToConsole(qr);
+      }
+      
       sessionManager.updateSession(sessionId, {
         qrCode: qr,
         status: 'qr_waiting'

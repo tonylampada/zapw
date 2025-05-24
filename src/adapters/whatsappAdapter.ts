@@ -1,9 +1,7 @@
 import makeWASocket, { 
   DisconnectReason, 
   useMultiFileAuthState,
-  ConnectionState,
-  WASocket,
-  proto
+  WASocket
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import * as fs from 'fs';

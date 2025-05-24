@@ -27,14 +27,20 @@
 - Created integration tests (11 tests, all passing)
 - Status: COMPLETED
 
-## Task 4: Baileys Adapter (Connection Only) 🚧
+## Task 4: Baileys Adapter (Connection Only) ✅
 - Created IWhatsAppClient interface
 - Implemented BaileysClient with Baileys integration
 - Created MockWhatsAppClient for testing
 - Implemented WhatsAppService to manage clients
 - Added QR code event handling
 - Added connection/disconnection event handling
-- Status: IN PROGRESS - Need to update controllers and add tests
+- Updated sessions controller to initialize WhatsApp on session creation
+- Updated sessions controller to terminate WhatsApp on session deletion
+- Created QR code utility for console display
+- Added unit tests for WhatsApp adapter (4 tests)
+- Updated integration tests to mock WhatsApp service
+- All tests passing (31 tests total)
+- Status: COMPLETED
 
 ## Task 5: Message Sending 📋
 - Status: PENDING
