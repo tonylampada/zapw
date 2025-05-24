@@ -42,8 +42,22 @@
 - All tests passing (31 tests total)
 - Status: COMPLETED
 
-## Task 5: Message Sending 📋
-- Status: PENDING
+## Task 5: Message Sending ✅
+- Created comprehensive Message models for all message types
+- Extended WhatsApp adapter with sendMessage method
+- Implemented message sending in WhatsAppService
+- Created message validator with strict validation rules
+- Created messages controller with POST /sessions/:id/messages endpoint
+- Added support for all message types:
+  - Text messages
+  - Media messages (image, video, audio, document)
+  - Location messages
+  - Contact messages (with vCard generation)
+- Media can be sent via URL or base64
+- Added unit tests for message validator (15 tests)
+- Added integration tests for messages API (10 tests)
+- All tests passing (54 tests total)
+- Status: COMPLETED
 
 ## Task 6: Incoming Message Handling & Webhook 📋
 - Status: PENDING

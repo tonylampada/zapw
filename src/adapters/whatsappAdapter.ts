@@ -6,6 +6,7 @@ import makeWASocket, {
 import { Boom } from '@hapi/boom';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Message, TextMessage, MediaMessage, LocationMessage, ContactMessage } from '../models/Message';
 
 export interface ConnectionInfo {
   phoneNumber: string;
@@ -20,6 +21,7 @@ export interface IWhatsAppClient {
   onQR(callback: (qr: string) => void): void;
   onConnected(callback: (info: ConnectionInfo) => void): void;
   onDisconnected(callback: (reason: any) => void): void;
+  sendMessage(message: Message): Promise<string>;
 }
 
 export class BaileysClient implements IWhatsAppClient {
@@ -106,6 +108,85 @@ export class BaileysClient implements IWhatsAppClient {
   onDisconnected(callback: (reason: any) => void): void {
     this.disconnectedCallback = callback;
   }
+
+  async sendMessage(message: Message): Promise<string> {
+    if (!this.socket) throw new Error('Not connected');
+    
+    const jid = this.formatJID(message.to);
+    let content: any;
+    
+    switch (message.type) {
+      case 'text':
+        content = { text: (message as TextMessage).text };
+        break;
+        
+      case 'image':
+      case 'video':
+      case 'audio':
+      case 'document':
+        const media = message as MediaMessage;
+        const buffer = await this.getMediaBuffer(media);
+        content = {
+          [message.type]: buffer,
+          caption: media.caption,
+          fileName: media.fileName
+        };
+        break;
+        
+      case 'location':
+        const loc = message as LocationMessage;
+        content = {
+          location: {
+            degreesLatitude: loc.latitude,
+            degreesLongitude: loc.longitude,
+            name: loc.name,
+            address: loc.address
+          }
+        };
+        break;
+        
+      case 'contact':
+        const contact = message as ContactMessage;
+        content = {
+          contacts: {
+            displayName: contact.contactName,
+            contacts: [{
+              vcard: this.generateVCard(contact)
+            }]
+          }
+        };
+        break;
+    }
+    
+    const result = await this.socket.sendMessage(jid, content);
+    return result?.key?.id || '';
+  }
+  
+  private formatJID(number: string): string {
+    // Ensure proper WhatsApp JID format
+    const cleaned = number.replace(/\D/g, '');
+    return cleaned.includes('@') ? cleaned : `${cleaned}@s.whatsapp.net`;
+  }
+  
+  private async getMediaBuffer(media: MediaMessage): Promise<Buffer> {
+    if (media.mediaBase64) {
+      return Buffer.from(media.mediaBase64, 'base64');
+    } else if (media.mediaUrl) {
+      // Download from URL
+      const response = await fetch(media.mediaUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    }
+    throw new Error('No media source provided');
+  }
+  
+  private generateVCard(contact: ContactMessage): string {
+    return `BEGIN:VCARD
+VERSION:3.0
+FN:${contact.contactName}
+TEL;type=CELL;type=VOICE;waid=${contact.contactNumber.replace(/\D/g, '')}:${contact.contactNumber}
+END:VCARD`;
+  }
 }
 
 // Mock implementation for testing
@@ -160,5 +241,21 @@ export class MockWhatsAppClient implements IWhatsAppClient {
 
   onDisconnected(callback: (reason: any) => void): void {
     this.disconnectedCallback = callback;
+  }
+
+  async sendMessage(message: Message): Promise<string> {
+    if (this.connectionState !== 'open') {
+      throw new Error('Not connected');
+    }
+    
+    // Simulate message sending with a small delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Generate mock message ID
+    const messageId = `mock-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    console.log(`[Mock] Sending ${message.type} message to ${message.to}`);
+    
+    return messageId;
   }
 }

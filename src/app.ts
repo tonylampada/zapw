@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { sessionsController } from './controllers/sessionsController';
+import { messagesController } from './controllers/messagesController';
 import { errorHandler } from './middleware/errorHandler';
 
 export const createApp = (): Application => {
@@ -24,6 +25,7 @@ export const createApp = (): Application => {
 
   // Routes
   app.use('/sessions', sessionsController);
+  app.use('/', messagesController);
 
   // Error handling middleware
   app.use(errorHandler);

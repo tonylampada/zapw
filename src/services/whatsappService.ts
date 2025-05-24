@@ -2,6 +2,7 @@ import { sessionManager } from './sessionManager';
 import { IWhatsAppClient, BaileysClient, MockWhatsAppClient } from '../adapters/whatsappAdapter';
 import { SessionNotFoundError } from '../models/errors';
 import { printQRToConsole } from '../utils/qrUtil';
+import { Message, SendMessageResponse } from '../models/Message';
 
 export class WhatsAppService {
   private clients: Map<string, IWhatsAppClient> = new Map();
@@ -82,6 +83,34 @@ export class WhatsAppService {
   isSessionConnected(sessionId: string): boolean {
     const client = this.clients.get(sessionId);
     return client?.getConnectionState() === 'open';
+  }
+
+  async sendMessage(sessionId: string, message: Message): Promise<SendMessageResponse> {
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      throw new SessionNotFoundError(`Session ${sessionId} not found`);
+    }
+    
+    if (session.status !== 'connected') {
+      throw new Error('Session not connected');
+    }
+    
+    const client = this.clients.get(sessionId);
+    if (!client) {
+      throw new Error('Client not initialized');
+    }
+    
+    try {
+      const messageId = await client.sendMessage(message);
+      return {
+        messageId,
+        timestamp: Date.now(),
+        status: 'sent'
+      };
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      throw new Error('Failed to send message');
+    }
   }
 }
 
