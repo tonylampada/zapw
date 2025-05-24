@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { sessionsController } from './controllers/sessionsController';
 import { messagesController } from './controllers/messagesController';
+import testWebhookController from './controllers/testWebhookController';
 import { errorHandler } from './middleware/errorHandler';
 
 export const createApp = (): Application => {
@@ -26,6 +27,11 @@ export const createApp = (): Application => {
   // Routes
   app.use('/sessions', sessionsController);
   app.use('/', messagesController);
+  
+  // Test webhook endpoint (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    app.use('/', testWebhookController);
+  }
 
   // Error handling middleware
   app.use(errorHandler);

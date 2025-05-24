@@ -22,6 +22,8 @@ export interface IWhatsAppClient {
   onConnected(callback: (info: ConnectionInfo) => void): void;
   onDisconnected(callback: (reason: any) => void): void;
   sendMessage(message: Message): Promise<string>;
+  onMessageReceived(callback: (message: any) => void): void;
+  onMessageStatusUpdate(callback: (update: any) => void): void;
 }
 
 export class BaileysClient implements IWhatsAppClient {
@@ -29,6 +31,9 @@ export class BaileysClient implements IWhatsAppClient {
   private qrCallback?: (qr: string) => void;
   private connectedCallback?: (info: ConnectionInfo) => void;
   private disconnectedCallback?: (reason: any) => void;
+  private messageReceivedCallback?: (message: any) => void;
+  // @ts-ignore - Used via public method and event handler
+  private _messageStatusUpdateCallback?: (update: any) => void;
   private connectionState: 'connecting' | 'open' | 'closed' = 'closed';
 
   constructor(public sessionId: string) {}
@@ -81,6 +86,25 @@ export class BaileysClient implements IWhatsAppClient {
         if (this.connectedCallback) {
           this.connectedCallback({ phoneNumber, name });
         }
+      }
+    });
+    
+    // Listen for incoming messages
+    this.socket.ev.on('messages.upsert', async (upsert: any) => {
+      const messages = upsert.messages;
+      
+      for (const msg of messages) {
+        // Only process incoming messages (not our own)
+        if (!msg.key.fromMe && upsert.type === 'notify') {
+          this.handleIncomingMessage(msg);
+        }
+      }
+    });
+    
+    // Listen for message status updates
+    this.socket.ev.on('messages.update', (updates: any) => {
+      for (const update of updates) {
+        this.handleMessageStatusUpdate(update);
       }
     });
   }
@@ -187,6 +211,84 @@ FN:${contact.contactName}
 TEL;type=CELL;type=VOICE;waid=${contact.contactNumber.replace(/\D/g, '')}:${contact.contactNumber}
 END:VCARD`;
   }
+  
+  private handleIncomingMessage(msg: any): void {
+    if (!this.messageReceivedCallback) return;
+    
+    const messageData = this.parseMessage(msg);
+    this.messageReceivedCallback(messageData);
+  }
+  
+  private handleMessageStatusUpdate(update: any): void {
+    if (!this._messageStatusUpdateCallback) return;
+    this._messageStatusUpdateCallback(update);
+  }
+  
+  private parseMessage(msg: any): any {
+    const from = msg.key.remoteJid;
+    const isGroup = from.endsWith('@g.us');
+    
+    let parsed: any = {
+      from: msg.key.participant || from,
+      to: this.socket!.user?.id,
+      messageId: msg.key.id,
+      timestamp: msg.messageTimestamp * 1000,
+      isGroup,
+      groupId: isGroup ? from : undefined
+    };
+    
+    // Parse message content based on type
+    if (msg.message?.conversation || msg.message?.extendedTextMessage) {
+      parsed.type = 'text';
+      parsed.text = msg.message.conversation || msg.message.extendedTextMessage.text;
+    } else if (msg.message?.imageMessage) {
+      parsed.type = 'image';
+      parsed.caption = msg.message.imageMessage.caption;
+      parsed.hasMedia = true;
+    } else if (msg.message?.videoMessage) {
+      parsed.type = 'video';
+      parsed.caption = msg.message.videoMessage.caption;
+      parsed.hasMedia = true;
+    } else if (msg.message?.audioMessage) {
+      parsed.type = 'audio';
+      parsed.hasMedia = true;
+    } else if (msg.message?.documentMessage) {
+      parsed.type = 'document';
+      parsed.fileName = msg.message.documentMessage.fileName;
+      parsed.hasMedia = true;
+    } else if (msg.message?.locationMessage) {
+      parsed.type = 'location';
+      parsed.location = {
+        latitude: msg.message.locationMessage.degreesLatitude,
+        longitude: msg.message.locationMessage.degreesLongitude,
+        name: msg.message.locationMessage.name,
+        address: msg.message.locationMessage.address
+      };
+    } else if (msg.message?.contactMessage) {
+      parsed.type = 'contact';
+      const vcard = msg.message.contactMessage.vcard;
+      parsed.contact = {
+        name: msg.message.contactMessage.displayName,
+        number: this.extractPhoneFromVCard(vcard)
+      };
+    }
+    
+    return parsed;
+  }
+  
+  private extractPhoneFromVCard(vcard: string): string {
+    // Extract phone number from vCard
+    const match = vcard.match(/TEL[^:]*:([+\d\s-]+)/i);
+    return match ? match[1].trim() : '';
+  }
+  
+  onMessageReceived(callback: (message: any) => void): void {
+    this.messageReceivedCallback = callback;
+  }
+  
+  onMessageStatusUpdate(callback: (update: any) => void): void {
+    this._messageStatusUpdateCallback = callback;
+  }
 }
 
 // Mock implementation for testing
@@ -194,6 +296,9 @@ export class MockWhatsAppClient implements IWhatsAppClient {
   private qrCallback?: (qr: string) => void;
   private connectedCallback?: (info: ConnectionInfo) => void;
   private disconnectedCallback?: (reason: any) => void;
+  private messageReceivedCallback?: (message: any) => void;
+  // @ts-ignore - Used via public method
+  private _messageStatusUpdateCallback?: (update: any) => void;
   private connectionState: 'connecting' | 'open' | 'closed' = 'closed';
 
   constructor(public sessionId: string) {}
@@ -257,5 +362,20 @@ export class MockWhatsAppClient implements IWhatsAppClient {
     console.log(`[Mock] Sending ${message.type} message to ${message.to}`);
     
     return messageId;
+  }
+  
+  onMessageReceived(callback: (message: any) => void): void {
+    this.messageReceivedCallback = callback;
+  }
+  
+  onMessageStatusUpdate(callback: (update: any) => void): void {
+    this._messageStatusUpdateCallback = callback;
+  }
+  
+  // Simulate receiving a message for testing
+  simulateIncomingMessage(message: any): void {
+    if (this.messageReceivedCallback) {
+      this.messageReceivedCallback(message);
+    }
   }
 }

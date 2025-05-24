@@ -3,6 +3,8 @@ import { IWhatsAppClient, BaileysClient, MockWhatsAppClient } from '../adapters/
 import { SessionNotFoundError } from '../models/errors';
 import { printQRToConsole } from '../utils/qrUtil';
 import { Message, SendMessageResponse } from '../models/Message';
+import { webhookAdapter } from '../adapters/webhookAdapter';
+import { MessageReceivedEvent, WebhookEvent } from '../models/Event';
 
 export class WhatsAppService {
   private clients: Map<string, IWhatsAppClient> = new Map();
@@ -38,7 +40,7 @@ export class WhatsAppService {
       });
     });
 
-    client.onConnected((info) => {
+    client.onConnected(async (info) => {
       console.log(`Session ${sessionId} connected: ${info.phoneNumber}`);
       sessionManager.updateSession(sessionId, {
         phoneNumber: info.phoneNumber,
@@ -47,16 +49,77 @@ export class WhatsAppService {
         connectedAt: new Date(),
         qrCode: undefined // Clear QR code after connection
       });
+      
+      // Send session connected event
+      await webhookAdapter.sendEvent({
+        sessionId,
+        origin: info.phoneNumber,
+        eventType: 'session.connected',
+        timestamp: Date.now(),
+        data: { phoneNumber: info.phoneNumber, name: info.name }
+      });
     });
 
-    client.onDisconnected((reason) => {
+    client.onDisconnected(async (reason) => {
       console.log(`Session ${sessionId} disconnected:`, reason);
       sessionManager.updateSession(sessionId, {
         status: 'disconnected'
       });
       
+      const session = sessionManager.getSession(sessionId);
+      if (session) {
+        // Send session disconnected event
+        await webhookAdapter.sendEvent({
+          sessionId,
+          origin: session.phoneNumber || sessionId,
+          eventType: 'session.disconnected',
+          timestamp: Date.now(),
+          data: { reason }
+        });
+      }
+      
       // Remove client from map on disconnect
       this.clients.delete(sessionId);
+    });
+    
+    // Handle incoming messages
+    client.onMessageReceived(async (message) => {
+      const session = sessionManager.getSession(sessionId);
+      if (!session) return;
+      
+      const event: MessageReceivedEvent = {
+        sessionId,
+        origin: session.phoneNumber || sessionId,
+        eventType: 'message.received',
+        timestamp: Date.now(),
+        data: message
+      };
+      
+      await webhookAdapter.sendEvent(event);
+    });
+    
+    // Handle message status updates
+    client.onMessageStatusUpdate(async (update) => {
+      const session = sessionManager.getSession(sessionId);
+      if (!session) return;
+      
+      // Determine event type based on update
+      let eventType: 'message.delivered' | 'message.read' | 'message.sent' = 'message.sent';
+      if (update.status === 3) eventType = 'message.delivered';
+      if (update.status === 4) eventType = 'message.read';
+      
+      const event: WebhookEvent = {
+        sessionId,
+        origin: session.phoneNumber || sessionId,
+        eventType,
+        timestamp: Date.now(),
+        data: {
+          messageId: update.key?.id,
+          status: update.status
+        }
+      };
+      
+      await webhookAdapter.sendEvent(event);
     });
 
     try {

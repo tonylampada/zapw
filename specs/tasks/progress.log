@@ -59,8 +59,24 @@
 - All tests passing (54 tests total)
 - Status: COMPLETED
 
-## Task 6: Incoming Message Handling & Webhook 📋
-- Status: PENDING
+## Task 6: Incoming Message Handling & Webhook ✅
+- Created Event models for webhook payloads
+- Created WebhookAdapter with retry mechanism
+- Extended WhatsApp adapter with incoming message handling:
+  - Added onMessageReceived callback
+  - Added onMessageStatusUpdate callback
+  - Implemented message parsing for all types
+- Updated WhatsAppService to:
+  - Forward incoming messages to webhook
+  - Send session connection/disconnection events
+  - Send message status updates (sent, delivered, read)
+- Added webhook configuration to config.ts
+- Created test webhook endpoint for development
+- Added comprehensive webhook adapter unit tests (8 tests)
+- Added webhook integration tests (5 tests)
+- Webhook retry mechanism with configurable attempts and delays
+- All tests passing (65 tests total)
+- Status: COMPLETED
 
 ## Task 7: Session Persistence 📋
 - Status: PENDING
