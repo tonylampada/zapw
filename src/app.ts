@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import { sessionsController } from './controllers/sessionsController';
 import { messagesController } from './controllers/messagesController';
 import testWebhookController from './controllers/testWebhookController';
@@ -14,6 +15,9 @@ export const createApp = (): Application => {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Serve static files
+  app.use(express.static(path.join(__dirname, 'public')));
 
   // Health check endpoint
   app.get('/health', (_req: Request, res: Response) => {

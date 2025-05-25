@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZAPW - WhatsApp API Service</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #25D366;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+    .features {
+      list-style: none;
+      padding: 0;
+    }
+    .features li {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .features li:last-child {
+      border-bottom: none;
+    }
+    .features li:before {
+      content: "✓ ";
+      color: #25D366;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .endpoints {
+      background-color: #f8f8f8;
+      padding: 20px;
+      border-radius: 5px;
+      margin-top: 30px;
+    }
+    .endpoints h3 {
+      margin-top: 0;
+      color: #444;
+    }
+    .endpoint-list {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 15px;
+      background-color: #25D366;
+      color: white;
+      border-radius: 20px;
+      font-size: 0.9em;
+      margin-top: 20px;
+    }
+    .links {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    .links a {
+      color: #25D366;
+      text-decoration: none;
+      margin-right: 20px;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ZAPW</h1>
+    <p class="subtitle">WhatsApp API Service powered by Baileys</p>
+    
+    <div class="status">Service is running</div>
+    
+    <h2>Features</h2>
+    <ul class="features">
+      <li>Multi-device WhatsApp sessions</li>
+      <li>QR code authentication</li>
+      <li>Send text, images, videos, documents, and more</li>
+      <li>Receive messages via webhooks</li>
+      <li>Persistent session management</li>
+      <li>RESTful API design</li>
+    </ul>
+    
+    <div class="endpoints">
+      <h3>Available Endpoints</h3>
+      <div class="endpoint-list">
+        <p><strong>Session Management:</strong></p>
+        <p>POST /sessions - Create new session</p>
+        <p>GET /sessions - List all sessions</p>
+        <p>GET /sessions/:id - Get session details</p>
+        <p>DELETE /sessions/:id - Terminate session</p>
+        <br>
+        <p><strong>Messaging:</strong></p>
+        <p>POST /sessions/:id/messages - Send message</p>
+        <p>GET /sessions/:id/media/:messageId - Retrieve media</p>
+      </div>
+    </div>
+    
+    <div class="links">
+      <a href="/health">Health Check</a>
+      <a href="/docs.md">API Documentation</a>
+      <a href="https://github.com/tonylampada/zapw">GitHub Repository</a>
+    </div>
+  </div>
+</body>
+</html>
