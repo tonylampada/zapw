@@ -100,6 +100,40 @@ export class WhatsAppService {
 
     client.onDisconnected(async (reason) => {
       console.log(`Session ${sessionId} disconnected:`, reason);
+      
+      // Check if it's error 515 (requires restart after pairing)
+      const error = reason.reason;
+      const statusCode = error?.output?.statusCode;
+      const shouldReconnect = reason.shouldReconnect;
+      
+      if (statusCode === 515 && shouldReconnect) {
+        console.log(`Session ${sessionId} requires restart after pairing, reconnecting...`);
+        
+        // Keep status as connecting
+        await sessionManager.updateSession(sessionId, {
+          status: 'connecting'
+        });
+        
+        // Remove old client
+        this.clients.delete(sessionId);
+        
+        // Wait a bit before reconnecting
+        setTimeout(async () => {
+          try {
+            console.log(`Attempting to reconnect session ${sessionId}...`);
+            await this.initializeSession(sessionId);
+          } catch (error) {
+            console.error(`Failed to reconnect session ${sessionId}:`, error);
+            await sessionManager.updateSession(sessionId, {
+              status: 'disconnected'
+            });
+          }
+        }, 2000);
+        
+        return; // Don't mark as disconnected yet
+      }
+      
+      // Normal disconnect
       await sessionManager.updateSession(sessionId, {
         status: 'disconnected'
       });

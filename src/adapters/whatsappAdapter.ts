@@ -52,7 +52,9 @@ export class BaileysClient implements IWhatsAppClient {
     this.socket = makeWASocket({
       auth: state,
       printQRInTerminal: false,
-      defaultQueryTimeoutMs: 60000
+      defaultQueryTimeoutMs: 60000,
+      browser: ['Chrome (Linux)', 'Chrome', '129.0.0.0'],
+      syncFullHistory: false
     });
 
     this.connectionState = 'connecting';
@@ -68,7 +70,11 @@ export class BaileysClient implements IWhatsAppClient {
       
       if (connection === 'close') {
         this.connectionState = 'closed';
-        const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        
+        console.log(`Connection closed. Status code: ${statusCode}, Should reconnect: ${shouldReconnect}`);
+        console.log('Disconnect reason:', lastDisconnect?.error);
         
         if (this.disconnectedCallback) {
           this.disconnectedCallback({
