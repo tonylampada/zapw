@@ -7,6 +7,7 @@ import { Boom } from '@hapi/boom';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Message, TextMessage, MediaMessage, LocationMessage, ContactMessage } from '../models/Message';
+import * as QRCode from 'qrcode';
 
 export interface ConnectionInfo {
   phoneNumber: string;
@@ -308,9 +309,19 @@ export class MockWhatsAppClient implements IWhatsAppClient {
     this.connectionState = 'connecting';
     
     // Simulate QR generation after 100ms
-    setTimeout(() => {
+    setTimeout(async () => {
       if (this.qrCallback) {
-        this.qrCallback('mock-qr-code-data-for-testing');
+        // Generate a mock base64 QR code
+        try {
+          const mockQRData = `mock-qr-${this.sessionId}-${Date.now()}`;
+          const qrCodeImage = await QRCode.toDataURL(mockQRData, {
+            width: 256,
+            margin: 2
+          });
+          this.qrCallback(qrCodeImage);
+        } catch (error) {
+          this.qrCallback('mock-qr-code-data-for-testing');
+        }
       }
     }, 100);
     

@@ -5,6 +5,7 @@ import { printQRToConsole } from '../utils/qrUtil';
 import { Message, SendMessageResponse } from '../models/Message';
 import { webhookAdapter } from '../adapters/webhookAdapter';
 import { MessageReceivedEvent, WebhookEvent } from '../models/Event';
+import * as QRCode from 'qrcode';
 
 export class WhatsAppService {
   private clients: Map<string, IWhatsAppClient> = new Map();
@@ -42,7 +43,7 @@ export class WhatsAppService {
       : new BaileysClient(sessionId);
 
     // Set up event handlers
-    client.onQR((qr) => {
+    client.onQR(async (qr) => {
       console.log(`QR code received for session ${sessionId}`);
       
       // Print QR to console in development
@@ -50,11 +51,27 @@ export class WhatsAppService {
         printQRToConsole(qr);
       }
       
+      // Convert QR data to base64 image
+      let qrCodeImage: string;
+      try {
+        qrCodeImage = await QRCode.toDataURL(qr, {
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+      } catch (error) {
+        console.error('Failed to generate QR code image:', error);
+        qrCodeImage = qr; // Fallback to raw data
+      }
+      
       // QR codes expire after 60 seconds
       const qrExpiresAt = new Date(Date.now() + 60 * 1000);
       
       sessionManager.updateSession(sessionId, {
-        qrCode: qr,
+        qrCode: qrCodeImage,
         qrExpiresAt,
         status: 'qr_waiting'
       }).catch(err => console.error('Failed to update session:', err));

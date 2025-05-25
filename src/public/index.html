@@ -368,7 +368,10 @@
             container.innerHTML = `
               <div class="qr-container">
                 <p>Scan this QR code with WhatsApp:</p>
-                <div class="qr-code">${data.data.qrCode}</div>
+                ${data.data.qrCode.startsWith('data:image/') 
+                  ? `<img src="${data.data.qrCode}" alt="QR Code" style="max-width: 256px;" />`
+                  : `<div class="qr-code">${data.data.qrCode}</div>`
+                }
               </div>
             `;
           } else if (data.data.status === 'connected') {

@@ -20,8 +20,10 @@ export const createApp = (): Application => {
         scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
+        upgradeInsecureRequests: null,  // Don't force HTTPS
       },
     },
+    hsts: false,  // Disable HSTS for HTTP-only deployments
   }));
   app.use(cors());
   app.use(express.json());
