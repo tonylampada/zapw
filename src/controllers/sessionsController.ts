@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { sessionManager } from '../services/sessionManager';
 import { whatsappService } from '../services/whatsappService';
 import { SessionAlreadyExistsError } from '../models/errors';
-import { CreateSessionRequest, SessionResponse } from '../models/api';
+import { SessionResponse } from '../models/api';
 import { Session } from '../models/Session';
 
 const router = Router();
@@ -20,7 +20,7 @@ function mapSessionToResponse(session: Session): SessionResponse {
 }
 
 // POST /sessions - Create new session
-router.post('/', async (req: Request<Record<string, never>, Record<string, never>, CreateSessionRequest>, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sessionId } = req.body;
     const session = await sessionManager.createSession(sessionId);
@@ -29,21 +29,22 @@ router.post('/', async (req: Request<Record<string, never>, Record<string, never
     whatsappService.initializeSession(session.id)
       .catch(err => console.error('Failed to initialize WhatsApp:', err));
     
-    res.status(201).json(mapSessionToResponse(session));
+    res.status(201).json({
+      status: 'success',
+      data: mapSessionToResponse(session)
+    });
   } catch (error) {
     if (error instanceof SessionAlreadyExistsError) {
       res.status(409).json({
-        error: 'Session Already Exists',
-        message: error.message,
-        statusCode: 409
+        status: 'error',
+        error: error.message
       });
       return;
     }
     console.error('Error creating session:', error);
     res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to create session',
-      statusCode: 500
+      status: 'error',
+      error: 'Failed to create session'
     });
   }
 });
@@ -52,13 +53,15 @@ router.post('/', async (req: Request<Record<string, never>, Record<string, never
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const sessions = sessionManager.getAllSessions();
-    res.json(sessions.map(mapSessionToResponse));
+    res.json({
+      status: 'success',
+      data: sessions.map(mapSessionToResponse)
+    });
   } catch (error) {
     console.error('Error listing sessions:', error);
     res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to list sessions',
-      statusCode: 500
+      status: 'error',
+      error: 'Failed to list sessions'
     });
   }
 });
@@ -69,19 +72,20 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     const session = sessionManager.getSession(req.params.id);
     if (!session) {
       res.status(404).json({
-        error: 'Session Not Found',
-        message: `Session ${req.params.id} not found`,
-        statusCode: 404
+        status: 'error',
+        error: `Session ${req.params.id} not found`
       });
       return;
     }
-    res.json(mapSessionToResponse(session));
+    res.json({
+      status: 'success',
+      data: mapSessionToResponse(session)
+    });
   } catch (error) {
     console.error('Error getting session:', error);
     res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to get session',
-      statusCode: 500
+      status: 'error',
+      error: 'Failed to get session'
     });
   }
 });
@@ -95,9 +99,8 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     const deleted = await sessionManager.deleteSession(req.params.id);
     if (!deleted) {
       res.status(404).json({
-        error: 'Session Not Found',
-        message: `Session ${req.params.id} not found`,
-        statusCode: 404
+        status: 'error',
+        error: `Session ${req.params.id} not found`
       });
       return;
     }
@@ -105,9 +108,8 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Error deleting session:', error);
     res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to delete session',
-      statusCode: 500
+      status: 'error',
+      error: 'Failed to delete session'
     });
   }
 });

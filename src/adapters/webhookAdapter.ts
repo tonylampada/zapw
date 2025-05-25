@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { config } from '../utils/config';
 import { WebhookEvent } from '../models/Event';
+import { storeWebhookEvent } from '../controllers/eventsController';
 
 export class WebhookAdapter {
   private webhookUrl: string;
@@ -16,6 +17,9 @@ export class WebhookAdapter {
   }
 
   async sendEvent(event: WebhookEvent): Promise<void> {
+    // Always store event for display in test interface
+    storeWebhookEvent(event.sessionId, event.eventType, event.data);
+    
     if (!this.enabled || !this.webhookUrl) {
       console.log('Webhook disabled or URL not configured');
       return;

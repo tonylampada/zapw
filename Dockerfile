@@ -31,6 +31,9 @@ COPY src/ ./src/
 # Build the application
 RUN npm run build
 
+# Copy public files to dist
+RUN cp -r src/public dist/
+
 # Remove devDependencies to reduce image size
 RUN npm ci --only=production && npm cache clean --force
 

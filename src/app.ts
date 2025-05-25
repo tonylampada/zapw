@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { sessionsController } from './controllers/sessionsController';
 import { messagesController } from './controllers/messagesController';
+import { eventsController } from './controllers/eventsController';
 import testWebhookController from './controllers/testWebhookController';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -11,7 +12,17 @@ export const createApp = (): Application => {
   const app = express();
 
   // Middleware
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+      },
+    },
+  }));
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -30,6 +41,7 @@ export const createApp = (): Application => {
 
   // Routes
   app.use('/sessions', sessionsController);
+  app.use('/events', eventsController);
   app.use('/', messagesController);
   
   // Test webhook endpoint (only in development)

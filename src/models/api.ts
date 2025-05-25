@@ -1,3 +1,10 @@
+// Generic API response wrapper
+export interface ApiResponse<T = any> {
+  status: 'success' | 'error';
+  data?: T;
+  error?: string;
+}
+
 // Request bodies
 export interface CreateSessionRequest {
   sessionId?: string;

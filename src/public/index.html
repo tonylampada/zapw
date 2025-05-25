@@ -3,124 +3,605 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZAPW - WhatsApp API Service</title>
+  <title>ZAPW - WhatsApp API Test Interface</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       line-height: 1.6;
       color: #333;
-      max-width: 800px;
-      margin: 0 auto;
+      margin: 0;
       padding: 20px;
-      background-color: #f4f4f4;
+      background-color: #f0f2f5;
     }
+    
     .container {
-      background-color: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 1200px;
+      margin: 0 auto;
     }
+    
     h1 {
       color: #25D366;
       margin-bottom: 10px;
     }
+    
     .subtitle {
       color: #666;
-      font-size: 1.2em;
+      font-size: 1.1em;
       margin-bottom: 30px;
     }
-    .features {
-      list-style: none;
-      padding: 0;
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
     }
-    .features li {
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .features li:last-child {
-      border-bottom: none;
-    }
-    .features li:before {
-      content: "✓ ";
-      color: #25D366;
-      font-weight: bold;
-      margin-right: 10px;
-    }
-    .endpoints {
-      background-color: #f8f8f8;
+    
+    .card {
+      background-color: white;
       padding: 20px;
-      border-radius: 5px;
-      margin-top: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .endpoints h3 {
+    
+    .card h2 {
       margin-top: 0;
       color: #444;
+      font-size: 1.3em;
+      border-bottom: 2px solid #25D366;
+      padding-bottom: 10px;
     }
-    .endpoint-list {
-      font-family: 'Courier New', monospace;
-      font-size: 0.9em;
-    }
-    .status {
-      display: inline-block;
-      padding: 5px 15px;
+    
+    .btn {
       background-color: #25D366;
       color: white;
-      border-radius: 20px;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .btn:hover {
+      background-color: #128C7E;
+    }
+    
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+    
+    input[type="text"], input[type="tel"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+    
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .session-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .session-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 15px;
       font-size: 0.9em;
-      margin-top: 20px;
+      font-weight: 500;
     }
-    .links {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+    
+    .status-connected {
+      background-color: #d4edda;
+      color: #155724;
     }
-    .links a {
+    
+    .status-connecting {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-disconnected {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .event-item {
+      padding: 10px;
+      border-left: 3px solid #25D366;
+      background-color: #f8f9fa;
+      margin-bottom: 10px;
+      font-size: 0.9em;
+    }
+    
+    .event-time {
+      color: #666;
+      font-size: 0.85em;
+    }
+    
+    .event-type {
+      font-weight: bold;
       color: #25D366;
-      text-decoration: none;
-      margin-right: 20px;
     }
-    .links a:hover {
-      text-decoration: underline;
+    
+    .qr-container {
+      text-align: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .qr-code {
+      font-family: monospace;
+      font-size: 10px;
+      line-height: 1;
+      white-space: pre;
+      background-color: white;
+      padding: 20px;
+      display: inline-block;
+      border: 2px solid #ddd;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+    }
+    
+    .error {
+      color: #dc3545;
+      padding: 10px;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    
+    .success {
+      color: #155724;
+      padding: 10px;
+      background-color: #d4edda;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    
+    .media-preview {
+      max-width: 200px;
+      max-height: 200px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+    
+    .full-width {
+      grid-column: 1 / -1;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>ZAPW</h1>
-    <p class="subtitle">WhatsApp API Service powered by Baileys</p>
+    <h1>ZAPW Test Interface</h1>
+    <p class="subtitle">WhatsApp API Service - Test & Monitor Dashboard</p>
     
-    <div class="status">Service is running</div>
-    
-    <h2>Features</h2>
-    <ul class="features">
-      <li>Multi-device WhatsApp sessions</li>
-      <li>QR code authentication</li>
-      <li>Send text, images, videos, documents, and more</li>
-      <li>Receive messages via webhooks</li>
-      <li>Persistent session management</li>
-      <li>RESTful API design</li>
-    </ul>
-    
-    <div class="endpoints">
-      <h3>Available Endpoints</h3>
-      <div class="endpoint-list">
-        <p><strong>Session Management:</strong></p>
-        <p>POST /sessions - Create new session</p>
-        <p>GET /sessions - List all sessions</p>
-        <p>GET /sessions/:id - Get session details</p>
-        <p>DELETE /sessions/:id - Terminate session</p>
-        <br>
-        <p><strong>Messaging:</strong></p>
-        <p>POST /sessions/:id/messages - Send message</p>
-        <p>GET /sessions/:id/media/:messageId - Retrieve media</p>
+    <div class="grid">
+      <!-- Authentication Section -->
+      <div class="card">
+        <h2>Authentication</h2>
+        <button id="authBtn" class="btn" onclick="authenticate()">Create New Session</button>
+        <div id="qrContainer"></div>
+      </div>
+      
+      <!-- Sessions Section -->
+      <div class="card">
+        <h2>Active Sessions</h2>
+        <div id="sessionsList" class="loading">Loading sessions...</div>
+      </div>
+      
+      <!-- Message Testing Section -->
+      <div class="card">
+        <h2>Send Test Message</h2>
+        <select id="sessionSelect" onchange="updateSessionSelection()">
+          <option value="">Select a session...</option>
+        </select>
+        
+        <input type="tel" id="phoneNumber" placeholder="Phone number (e.g., 5511999999999)" />
+        
+        <select id="messageType" onchange="updateMessageForm()">
+          <option value="text">Text Message</option>
+          <option value="image">Image</option>
+          <option value="audio">Audio</option>
+          <option value="video">Video</option>
+          <option value="document">Document</option>
+        </select>
+        
+        <div id="textFields">
+          <textarea id="messageText" placeholder="Enter your message..."></textarea>
+        </div>
+        
+        <div id="mediaFields" style="display: none;">
+          <input type="file" id="mediaFile" accept="*/*" onchange="previewMedia()" />
+          <textarea id="caption" placeholder="Caption (optional)"></textarea>
+          <img id="mediaPreview" class="media-preview" style="display: none;" />
+        </div>
+        
+        <button class="btn" onclick="sendMessage()">Send Message</button>
+        <div id="messageStatus"></div>
+      </div>
+      
+      <!-- Events Section -->
+      <div class="card full-width">
+        <h2>Recent Events (Last 10)</h2>
+        <button class="btn" onclick="clearEvents()">Clear Events</button>
+        <button class="btn" onclick="refreshEvents()">Refresh</button>
+        <div id="eventsList" class="loading">Loading events...</div>
       </div>
     </div>
-    
-    <div class="links">
-      <a href="/health">Health Check</a>
-      <a href="/docs.md">API Documentation</a>
-      <a href="https://github.com/tonylampada/zapw">GitHub Repository</a>
-    </div>
   </div>
+
+  <script>
+    let sessions = [];
+    let events = [];
+    let currentQRInterval = null;
+    
+    // Initialize the page
+    window.onload = function() {
+      loadSessions();
+      loadEvents();
+      setInterval(loadEvents, 5000); // Refresh events every 5 seconds
+    };
+    
+    // Load active sessions
+    async function loadSessions() {
+      try {
+        const response = await fetch('/sessions');
+        const data = await response.json();
+        sessions = data.data || [];
+        updateSessionsList();
+        updateSessionSelect();
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+        document.getElementById('sessionsList').innerHTML = '<div class="error">Failed to load sessions</div>';
+      }
+    }
+    
+    // Update sessions display
+    function updateSessionsList() {
+      const container = document.getElementById('sessionsList');
+      if (sessions.length === 0) {
+        container.innerHTML = '<p>No active sessions</p>';
+        return;
+      }
+      
+      container.innerHTML = sessions.map(session => `
+        <div class="session-item">
+          <div>
+            <strong>${session.id}</strong><br>
+            <small>${session.phoneNumber || 'Not connected'}</small>
+          </div>
+          <div>
+            <span class="session-status status-${session.status}">${session.status}</span>
+            <button class="btn btn-danger" onclick="deleteSession('${session.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Update session select dropdown
+    function updateSessionSelect() {
+      const select = document.getElementById('sessionSelect');
+      select.innerHTML = '<option value="">Select a session...</option>' +
+        sessions.filter(s => s.status === 'connected').map(session => 
+          `<option value="${session.id}">${session.id} - ${session.phoneNumber || 'Unknown'}</option>`
+        ).join('');
+    }
+    
+    // Create new session and show QR code
+    async function authenticate() {
+      const btn = document.getElementById('authBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating session...';
+      
+      try {
+        const response = await fetch('/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        
+        const data = await response.json();
+        if (data.status === 'success') {
+          const sessionId = data.data.id;
+          showQRCode(sessionId);
+          pollSessionStatus(sessionId);
+        } else {
+          throw new Error(data.error || 'Failed to create session');
+        }
+      } catch (error) {
+        alert('Error creating session: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create New Session';
+      }
+    }
+    
+    // Show QR code
+    function showQRCode(sessionId) {
+      const container = document.getElementById('qrContainer');
+      container.innerHTML = '<div class="loading">Generating QR code...</div>';
+      
+      // Poll for QR code
+      currentQRInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`/sessions/${sessionId}`);
+          const data = await response.json();
+          
+          if (data.data.qrCode) {
+            container.innerHTML = `
+              <div class="qr-container">
+                <p>Scan this QR code with WhatsApp:</p>
+                <div class="qr-code">${data.data.qrCode}</div>
+              </div>
+            `;
+          } else if (data.data.status === 'connected') {
+            clearInterval(currentQRInterval);
+            container.innerHTML = '<div class="success">Connected successfully!</div>';
+            loadSessions();
+          }
+        } catch (error) {
+          console.error('Error fetching QR:', error);
+        }
+      }, 2000);
+    }
+    
+    // Poll session status
+    function pollSessionStatus(sessionId) {
+      const statusInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`/sessions/${sessionId}`);
+          const data = await response.json();
+          
+          if (data.data.status === 'connected') {
+            clearInterval(statusInterval);
+            clearInterval(currentQRInterval);
+            document.getElementById('qrContainer').innerHTML = '<div class="success">Connected successfully!</div>';
+            loadSessions();
+          }
+        } catch (error) {
+          console.error('Error polling status:', error);
+        }
+      }, 3000);
+      
+      // Stop polling after 5 minutes
+      setTimeout(() => clearInterval(statusInterval), 300000);
+    }
+    
+    // Delete session
+    async function deleteSession(sessionId) {
+      if (!confirm('Are you sure you want to delete this session?')) return;
+      
+      try {
+        await fetch(`/sessions/${sessionId}`, { method: 'DELETE' });
+        loadSessions();
+      } catch (error) {
+        alert('Error deleting session: ' + error.message);
+      }
+    }
+    
+    // Update message form based on type
+    function updateMessageForm() {
+      const type = document.getElementById('messageType').value;
+      const textFields = document.getElementById('textFields');
+      const mediaFields = document.getElementById('mediaFields');
+      
+      if (type === 'text') {
+        textFields.style.display = 'block';
+        mediaFields.style.display = 'none';
+      } else {
+        textFields.style.display = 'none';
+        mediaFields.style.display = 'block';
+        
+        // Update file accept attribute
+        const fileInput = document.getElementById('mediaFile');
+        switch(type) {
+          case 'image': fileInput.accept = 'image/*'; break;
+          case 'audio': fileInput.accept = 'audio/*'; break;
+          case 'video': fileInput.accept = 'video/*'; break;
+          default: fileInput.accept = '*/*';
+        }
+      }
+    }
+    
+    // Preview media file
+    function previewMedia() {
+      const file = document.getElementById('mediaFile').files[0];
+      const preview = document.getElementById('mediaPreview');
+      
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+    
+    // Send message
+    async function sendMessage() {
+      const sessionId = document.getElementById('sessionSelect').value;
+      const phoneNumber = document.getElementById('phoneNumber').value;
+      const type = document.getElementById('messageType').value;
+      const statusDiv = document.getElementById('messageStatus');
+      
+      if (!sessionId || !phoneNumber) {
+        statusDiv.innerHTML = '<div class="error">Please select a session and enter a phone number</div>';
+        return;
+      }
+      
+      statusDiv.innerHTML = '<div class="loading">Sending message...</div>';
+      
+      try {
+        let body;
+        
+        if (type === 'text') {
+          const text = document.getElementById('messageText').value;
+          if (!text) {
+            throw new Error('Please enter a message');
+          }
+          
+          body = JSON.stringify({
+            to: phoneNumber,
+            type: 'text',
+            text: text
+          });
+        } else {
+          const file = document.getElementById('mediaFile').files[0];
+          if (!file) {
+            throw new Error('Please select a file');
+          }
+          
+          // Convert file to base64
+          const base64 = await fileToBase64(file);
+          const caption = document.getElementById('caption').value;
+          
+          body = JSON.stringify({
+            to: phoneNumber,
+            type: type,
+            media: base64,
+            caption: caption || undefined,
+            filename: type === 'document' ? file.name : undefined
+          });
+        }
+        
+        const response = await fetch(`/sessions/${sessionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          statusDiv.innerHTML = '<div class="success">Message sent successfully!</div>';
+          // Clear form
+          document.getElementById('messageText').value = '';
+          document.getElementById('caption').value = '';
+          document.getElementById('mediaFile').value = '';
+          document.getElementById('mediaPreview').style.display = 'none';
+        } else {
+          throw new Error(data.error || 'Failed to send message');
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Convert file to base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Load events
+    async function loadEvents() {
+      try {
+        const response = await fetch('/events');
+        const data = await response.json();
+        events = data.data || [];
+        updateEventsList();
+      } catch (error) {
+        console.error('Error loading events:', error);
+      }
+    }
+    
+    // Update events display
+    function updateEventsList() {
+      const container = document.getElementById('eventsList');
+      if (events.length === 0) {
+        container.innerHTML = '<p>No events yet</p>';
+        return;
+      }
+      
+      container.innerHTML = events.map(event => {
+        let content = `<div class="event-type">${event.eventType}</div>`;
+        content += `<div class="event-time">${new Date(event.timestamp).toLocaleString()}</div>`;
+        
+        if (event.data) {
+          if (event.data.text) {
+            content += `<div>Message: ${event.data.text}</div>`;
+          }
+          if (event.data.from) {
+            content += `<div>From: ${event.data.from}</div>`;
+          }
+          if (event.data.type && event.data.type !== 'text') {
+            content += `<div>Type: ${event.data.type}</div>`;
+            if (event.data.messageId) {
+              content += `<div><a href="/sessions/${event.sessionId}/media/${event.data.messageId}" target="_blank">View Media</a></div>`;
+            }
+          }
+        }
+        
+        return `<div class="event-item">${content}</div>`;
+      }).join('');
+    }
+    
+    // Clear events
+    async function clearEvents() {
+      try {
+        await fetch('/events', { method: 'DELETE' });
+        loadEvents();
+      } catch (error) {
+        console.error('Error clearing events:', error);
+      }
+    }
+    
+    // Refresh events
+    function refreshEvents() {
+      loadEvents();
+    }
+    
+    // Update session selection
+    function updateSessionSelection() {
+      // Could add additional logic here if needed
+    }
+  </script>
 </body>
 </html>
