@@ -195,6 +195,15 @@ Sessions are automatically persisted to the `sessions_data/` directory:
 - WhatsApp auth data stored per session in separate files
 - Sessions automatically restore on service restart
 
+## API Documentation
+
+For comprehensive API documentation with detailed examples, see **[docs.md](docs.md)**:
+- Complete endpoint reference with request/response examples
+- Detailed messaging examples (text, images, audio, video, documents, locations, contacts)
+- Webhook event documentation with real payload examples
+- Bot conversation flows and media handling workflows
+- Troubleshooting guide and best practices
+
 ## Security Notes
 
 - Add API authentication middleware for production use
