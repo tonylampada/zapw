@@ -32,7 +32,6 @@ export class BaileysClient implements IWhatsAppClient {
   private connectedCallback?: (info: ConnectionInfo) => void;
   private disconnectedCallback?: (reason: any) => void;
   private messageReceivedCallback?: (message: any) => void;
-  // @ts-ignore - Used via public method and event handler
   private _messageStatusUpdateCallback?: (update: any) => void;
   private connectionState: 'connecting' | 'open' | 'closed' = 'closed';
 
@@ -147,7 +146,7 @@ export class BaileysClient implements IWhatsAppClient {
       case 'image':
       case 'video':
       case 'audio':
-      case 'document':
+      case 'document': {
         const media = message as MediaMessage;
         const buffer = await this.getMediaBuffer(media);
         content = {
@@ -156,8 +155,9 @@ export class BaileysClient implements IWhatsAppClient {
           fileName: media.fileName
         };
         break;
+      }
         
-      case 'location':
+      case 'location': {
         const loc = message as LocationMessage;
         content = {
           location: {
@@ -168,8 +168,9 @@ export class BaileysClient implements IWhatsAppClient {
           }
         };
         break;
+      }
         
-      case 'contact':
+      case 'contact': {
         const contact = message as ContactMessage;
         content = {
           contacts: {
@@ -180,6 +181,7 @@ export class BaileysClient implements IWhatsAppClient {
           }
         };
         break;
+      }
     }
     
     const result = await this.socket.sendMessage(jid, content);
@@ -228,7 +230,7 @@ END:VCARD`;
     const from = msg.key.remoteJid;
     const isGroup = from.endsWith('@g.us');
     
-    let parsed: any = {
+    const parsed: any = {
       from: msg.key.participant || from,
       to: this.socket!.user?.id,
       messageId: msg.key.id,
@@ -297,7 +299,6 @@ export class MockWhatsAppClient implements IWhatsAppClient {
   private connectedCallback?: (info: ConnectionInfo) => void;
   private disconnectedCallback?: (reason: any) => void;
   private messageReceivedCallback?: (message: any) => void;
-  // @ts-ignore - Used via public method
   private _messageStatusUpdateCallback?: (update: any) => void;
   private connectionState: 'connecting' | 'open' | 'closed' = 'closed';
 
@@ -370,6 +371,13 @@ export class MockWhatsAppClient implements IWhatsAppClient {
   
   onMessageStatusUpdate(callback: (update: any) => void): void {
     this._messageStatusUpdateCallback = callback;
+  }
+  
+  // Simulate message status update for testing
+  simulateMessageStatusUpdate(update: any): void {
+    if (this._messageStatusUpdateCallback) {
+      this._messageStatusUpdateCallback(update);
+    }
   }
   
   // Simulate receiving a message for testing

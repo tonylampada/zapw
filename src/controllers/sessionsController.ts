@@ -20,7 +20,7 @@ function mapSessionToResponse(session: Session): SessionResponse {
 }
 
 // POST /sessions - Create new session
-router.post('/', async (req: Request<{}, {}, CreateSessionRequest>, res: Response): Promise<void> => {
+router.post('/', async (req: Request<Record<string, never>, Record<string, never>, CreateSessionRequest>, res: Response): Promise<void> => {
   try {
     const { sessionId } = req.body;
     const session = await sessionManager.createSession(sessionId);

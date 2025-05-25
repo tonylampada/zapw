@@ -7,7 +7,7 @@ import { SessionNotFoundError } from '../models/errors';
 const router = Router();
 
 // POST /sessions/:sessionId/messages - Send message
-router.post('/sessions/:sessionId/messages', async (req: Request<{sessionId: string}, {}, SendMessageRequest>, res: Response): Promise<void> => {
+router.post('/sessions/:sessionId/messages', async (req: Request<{sessionId: string}, Record<string, never>, SendMessageRequest>, res: Response): Promise<void> => {
   try {
     const { sessionId } = req.params;
     const message = validateSendMessageRequest(req.body);
