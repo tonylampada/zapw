@@ -14,6 +14,14 @@ describe('Health Check Endpoint', () => {
     expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
   });
 
+  it('should include uptime in seconds', async () => {
+    const response = await request(app).get('/health');
+    
+    expect(response.body.uptime).toBeDefined();
+    expect(typeof response.body.uptime).toBe('number');
+    expect(response.body.uptime).toBeGreaterThanOrEqual(0);
+  });
+
   it('should have correct content type', async () => {
     const response = await request(app).get('/health');
     

@@ -7,6 +7,7 @@ import { messagesController } from './controllers/messagesController';
 import { eventsController } from './controllers/eventsController';
 import testWebhookController from './controllers/testWebhookController';
 import { errorHandler } from './middleware/errorHandler';
+import { authMiddleware } from './middleware/authMiddleware';
 
 export const createApp = (): Application => {
   const app = express();
@@ -32,12 +33,16 @@ export const createApp = (): Application => {
   // Serve static files
   app.use(express.static(path.join(__dirname, 'public')));
 
+  // Apply authentication middleware
+  app.use(authMiddleware);
+
   // Health check endpoint
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'zapw'
+      service: 'zapw',
+      uptime: process.uptime()
     });
   });
 

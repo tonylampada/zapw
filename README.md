@@ -60,17 +60,23 @@ npm start
 ### Docker
 
 ```bash
-# Build and run with Docker Compose (recommended)
+# Using Docker Hub image (recommended)
+docker run -d \
+  -p 3000:3000 \
+  -v zapw-sessions:/app/sessions_data \
+  -e WEBHOOK_URL=https://your-webhook.com \
+  --name zapw \
+  tonylampada/zapw:latest
+
+# Or use Docker Compose
 docker-compose up -d
 
-# Or build and run manually
+# Build from source
 docker build -t zapw .
-docker run -d -p 3000:3000 --name zapw zapw
+docker run -d -p 3000:3000 -v zapw-sessions:/app/sessions_data --name zapw zapw
 
 # View logs
-docker-compose logs -f
-# or
-docker logs zapw
+docker logs -f zapw
 ```
 
 ## API Endpoints
@@ -174,6 +180,13 @@ The project follows clean architecture principles:
 - **Services** (`src/services/`) - Core business logic and orchestration  
 - **Adapters** (`src/adapters/`) - External integrations (Baileys, webhooks, persistence)
 - **Models** (`src/models/`) - TypeScript interfaces and data structures
+
+For detailed architecture diagrams and integration patterns, see **[ARCHITECTURE.md](ARCHITECTURE.md)**:
+- Docker Compose setup with PostgreSQL and Redis
+- Internal component structure and data flow
+- Front-end architecture and services
+- Message storage strategies
+- Deployment and scaling considerations
 
 ## Development Commands
 

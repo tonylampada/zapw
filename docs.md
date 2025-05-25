@@ -16,8 +16,9 @@ The typical workflow for using ZAPW:
 ### Quick Example
 
 ```bash
-# 1. Create session
-curl -X POST http://localhost:3000/sessions
+# 1. Create session (with optional API key)
+curl -X POST http://localhost:3000/sessions \
+  -H "Authorization: Bearer your-api-key"
 
 # 2. Response includes QR code to scan
 {
@@ -31,11 +32,13 @@ curl -X POST http://localhost:3000/sessions
 }
 
 # 3. Check connection status
-curl http://localhost:3000/sessions/abc123
+curl http://localhost:3000/sessions/abc123 \
+  -H "Authorization: Bearer your-api-key"
 
 # 4. Send a message (after connected)
 curl -X POST http://localhost:3000/sessions/abc123/messages \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-api-key" \
   -d '{
     "to": "5511999999999@s.whatsapp.net",
     "type": "text",
@@ -51,7 +54,46 @@ http://localhost:3000
 
 ## Authentication
 
-Currently, no authentication is required. **Add authentication middleware for production use.**
+API authentication is optional but recommended for production use.
+
+### Configuration
+
+Set the `API_KEY` environment variable to enable authentication:
+```bash
+API_KEY=your-secret-api-key-here
+```
+
+### Usage
+
+When `API_KEY` is configured, include it in your requests using one of these methods:
+
+1. **Authorization Header** (recommended):
+```bash
+curl -H "Authorization: Bearer your-secret-api-key-here" \
+  http://localhost:3000/sessions
+```
+
+2. **X-API-Key Header**:
+```bash
+curl -H "X-API-Key: your-secret-api-key-here" \
+  http://localhost:3000/sessions
+```
+
+### Excluded Endpoints
+
+The following endpoints do not require authentication:
+- `GET /health` - Health check
+- `GET /` - Service info/homepage
+
+### Error Response
+
+Requests without a valid API key will receive:
+```json
+{
+  "error": "Unauthorized",
+  "message": "API key is required"
+}
+```
 
 ## Response Format
 
@@ -89,7 +131,8 @@ Check service health status.
 {
   "status": "ok",
   "timestamp": "2025-05-25T00:00:00.000Z",
-  "service": "zapw"
+  "service": "zapw",
+  "uptime": 123.456
 }
 ```
 
