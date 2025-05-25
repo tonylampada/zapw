@@ -1,0 +1,38 @@
+# Node modules (will be installed in container)
+node_modules
+npm-debug.log*
+
+# Build output (will be built in container)
+dist
+
+# Development files
+.env.local
+.env.development
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+PROGRESS.md
+specs/
+
+# Tests
+test/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Session data (will be mounted as volume)
+sessions_data/
+sessions-metadata.json
+
+# CI/CD
+.github/

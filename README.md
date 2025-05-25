@@ -57,6 +57,22 @@ npm run build
 npm start
 ```
 
+### Docker
+
+```bash
+# Build and run with Docker Compose (recommended)
+docker-compose up -d
+
+# Or build and run manually
+docker build -t zapw .
+docker run -d -p 3000:3000 --name zapw zapw
+
+# View logs
+docker-compose logs -f
+# or
+docker logs zapw
+```
+
 ## API Endpoints
 
 ### Session Management

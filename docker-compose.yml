@@ -1,0 +1,28 @@
+services:
+  zapw:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SESSIONS_DATA_PATH=/app/sessions_data
+      # Webhook configuration - uncomment and set your webhook URL
+      # - WEBHOOK_URL=https://your-webhook-endpoint.com/webhook
+      # - ENABLE_WEBHOOK=true
+      - LOG_LEVEL=info
+      - MAX_RECONNECT_ATTEMPTS=3
+    volumes:
+      # Persist session data between container restarts
+      - sessions_data:/app/sessions_data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  sessions_data:
+    driver: local
