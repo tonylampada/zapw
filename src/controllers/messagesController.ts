@@ -13,39 +13,38 @@ router.post('/sessions/:sessionId/messages', async (req: Request<{sessionId: str
     const message = validateSendMessageRequest(req.body);
     
     const result = await whatsappService.sendMessage(sessionId, message);
-    res.json(result);
+    res.json({
+      status: 'success',
+      data: result
+    });
   } catch (error) {
     if (error instanceof SessionNotFoundError) {
       res.status(404).json({ 
-        error: 'Session Not Found',
-        message: error.message,
-        statusCode: 404
+        status: 'error',
+        error: error.message
       });
       return;
     }
     if (error instanceof Error) {
       if (error.message.includes('not connected')) {
         res.status(400).json({ 
-          error: 'Session Not Connected',
-          message: error.message,
-          statusCode: 400
+          status: 'error',
+          error: error.message
         });
         return;
       }
       if (error.message.includes('required')) {
         res.status(400).json({ 
-          error: 'Validation Error',
-          message: error.message,
-          statusCode: 400
+          status: 'error',
+          error: error.message
         });
         return;
       }
     }
     console.error('Failed to send message:', error);
     res.status(500).json({ 
-      error: 'Internal Server Error',
-      message: 'Failed to send message',
-      statusCode: 500
+      status: 'error',
+      error: 'Failed to send message'
     });
   }
 });
