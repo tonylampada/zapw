@@ -2,6 +2,47 @@
 
 ZAPW is a WhatsApp API service that provides RESTful endpoints for managing WhatsApp sessions and sending/receiving messages through the Baileys library.
 
+## Usage Flow
+
+The typical workflow for using ZAPW:
+
+1. **Create a Session** - POST to `/sessions` to initialize a new WhatsApp connection
+2. **Scan QR Code** - The response includes a QR code image (base64 PNG) that must be scanned with WhatsApp mobile app
+3. **Monitor Session Status** - Poll `/sessions/{id}` to check when status changes from `qr_waiting` to `connected`
+4. **Configure Webhook** - Set `WEBHOOK_URL` environment variable to receive all incoming events (messages, status changes, etc.)
+5. **Send Messages** - Once connected, use `/sessions/{id}/messages` to send text, images, audio, video, documents, locations, or contacts
+6. **Handle Incoming Events** - Your webhook endpoint will receive all WhatsApp events in real-time
+
+### Quick Example
+
+```bash
+# 1. Create session
+curl -X POST http://localhost:3000/sessions
+
+# 2. Response includes QR code to scan
+{
+  "status": "success",
+  "data": {
+    "id": "abc123",
+    "status": "qr_waiting",
+    "qrCode": "data:image/png;base64,iVBORw0...",
+    "qrExpiresAt": "2025-05-25T12:00:00.000Z"
+  }
+}
+
+# 3. Check connection status
+curl http://localhost:3000/sessions/abc123
+
+# 4. Send a message (after connected)
+curl -X POST http://localhost:3000/sessions/abc123/messages \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "5511999999999@s.whatsapp.net",
+    "type": "text",
+    "text": "Hello from ZAPW!"
+  }'
+```
+
 ## Base URL
 
 ```
