@@ -64,6 +64,7 @@ zapw/
 npm install                 # Install dependencies
 npm run build              # Compile TypeScript
 npm run dev                # Run with hot reload (nodemon + ts-node)
+npm start                  # Run production build (requires npm run build first)
 ```
 
 ### Testing
@@ -72,6 +73,8 @@ npm test                   # Run all tests
 npm run test:unit         # Run unit tests only
 npm run test:integration  # Run integration tests
 npm run test:watch        # Run tests in watch mode
+npm test -- --coverage    # Generate coverage report
+npm test path/to/test.ts  # Run a single test file
 ```
 
 ### Code Quality
@@ -84,8 +87,10 @@ npm run format           # Format code with Prettier
 
 ### Docker Operations
 ```bash
-docker build -t zapw .    # Build Docker image
-docker-compose up         # Run with docker-compose
+docker-compose up -d      # Run with docker-compose (detached)
+docker-compose logs -f    # View logs
+docker-compose down       # Stop and remove containers
+docker build -t zapw .    # Build Docker image manually
 ```
 
 ## Key Implementation Details
@@ -178,3 +183,9 @@ GitHub Actions workflow (`ci-cd.yml`) performs:
 
 - Always commit and push frequently whenever you reach a good state
 - Always keep a log of you tasks progress at spec/tasks. that should also be committed
+
+## Additional Resources
+
+- **API Documentation**: See `/docs.md` for comprehensive API documentation with examples
+- **Task Progress**: Check `/specs/tasks/` for detailed task breakdowns and progress tracking
+- **Environment Setup**: Copy `.env.example` to `.env` before running the application
