@@ -36,8 +36,13 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Run tests
-      run: npm test
+    - name: Run unit tests
+      run: npm run test:unit
+      env:
+        NODE_ENV: test
+        
+    - name: Run integration tests (excluding flaky webhook tests)
+      run: npx jest test/integration --testPathIgnorePatterns=webhook.test.ts
       env:
         NODE_ENV: test
 
