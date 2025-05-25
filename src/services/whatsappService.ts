@@ -50,8 +50,12 @@ export class WhatsAppService {
         printQRToConsole(qr);
       }
       
+      // QR codes expire after 60 seconds
+      const qrExpiresAt = new Date(Date.now() + 60 * 1000);
+      
       sessionManager.updateSession(sessionId, {
         qrCode: qr,
+        qrExpiresAt,
         status: 'qr_waiting'
       }).catch(err => console.error('Failed to update session:', err));
     });
@@ -63,7 +67,8 @@ export class WhatsAppService {
         name: info.name,
         status: 'connected',
         connectedAt: new Date(),
-        qrCode: undefined // Clear QR code after connection
+        qrCode: undefined, // Clear QR code after connection
+        qrExpiresAt: undefined // Clear expiration after connection
       });
       
       // Send session connected event
@@ -195,6 +200,60 @@ export class WhatsAppService {
       console.error('Failed to send message:', error);
       throw new Error('Failed to send message');
     }
+  }
+
+  async waitForQRCode(sessionId: string, timeoutMs: number = 30000): Promise<void> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeoutMs) {
+      const session = sessionManager.getSession(sessionId);
+      
+      if (!session) {
+        throw new SessionNotFoundError(`Session ${sessionId} not found`);
+      }
+      
+      // If we have a QR code or session is already connected/failed
+      if (session.qrCode || session.status === 'connected' || session.status === 'disconnected') {
+        return;
+      }
+      
+      // Wait a bit before checking again
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    throw new Error('Timeout waiting for QR code');
+  }
+
+  async refreshQRCode(sessionId: string): Promise<void> {
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      throw new SessionNotFoundError(`Session ${sessionId} not found`);
+    }
+    
+    // Only refresh if in qr_waiting status
+    if (session.status !== 'qr_waiting') {
+      return;
+    }
+    
+    // Check if QR is expired
+    if (session.qrExpiresAt && new Date() < session.qrExpiresAt) {
+      return; // QR is still valid
+    }
+    
+    console.log(`Refreshing expired QR for session ${sessionId}`);
+    
+    // Disconnect and reconnect to get new QR
+    const client = this.clients.get(sessionId);
+    if (client) {
+      await client.disconnect();
+      this.clients.delete(sessionId);
+    }
+    
+    // Reinitialize to get new QR
+    await this.initializeSession(sessionId);
+    
+    // Wait for new QR
+    await this.waitForQRCode(sessionId, 15000);
   }
 }
 

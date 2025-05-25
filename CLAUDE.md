@@ -183,6 +183,7 @@ GitHub Actions workflow (`ci-cd.yml`) performs:
 
 - Always commit and push frequently whenever you reach a good state
 - Always keep a log of you tasks progress at spec/tasks. that should also be committed
+- do not ask me every time before committing
 
 ## Additional Resources
 

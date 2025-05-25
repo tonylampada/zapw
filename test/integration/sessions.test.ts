@@ -7,7 +7,19 @@ import { whatsappService } from '../../src/services/whatsappService';
 jest.mock('../../src/services/whatsappService', () => ({
   whatsappService: {
     initializeSession: jest.fn().mockResolvedValue(undefined),
-    terminateSession: jest.fn().mockResolvedValue(undefined)
+    terminateSession: jest.fn().mockResolvedValue(undefined),
+    waitForQRCode: jest.fn().mockImplementation(async (sessionId: string) => {
+      // Simulate QR code generation
+      const session = require('../../src/services/sessionManager').sessionManager.getSession(sessionId);
+      if (session) {
+        await require('../../src/services/sessionManager').sessionManager.updateSession(sessionId, {
+          qrCode: '2@mock-qr-code',
+          qrExpiresAt: new Date(Date.now() + 60000),
+          status: 'qr_waiting'
+        });
+      }
+    }),
+    refreshQRCode: jest.fn().mockResolvedValue(undefined)
   }
 }));
 
@@ -28,10 +40,12 @@ describe('Sessions API', () => {
         .send({});
 
       expect(response.status).toBe(201);
-      expect(response.body.id).toBeDefined();
-      expect(response.body.status).toBe('initializing');
-      expect(response.body.createdAt).toBeDefined();
-      expect(response.body.phoneNumber).toBeUndefined();
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.status).toBe('qr_waiting');
+      expect(response.body.data.createdAt).toBeDefined();
+      expect(response.body.data.phoneNumber).toBeUndefined();
+      expect(response.body.data.qrCode).toBe('2@mock-qr-code');
+      expect(response.body.data.qrExpiresAt).toBeDefined();
     });
 
     it('should create session with custom ID', async () => {
@@ -40,8 +54,10 @@ describe('Sessions API', () => {
         .send({ sessionId: 'custom-123' });
 
       expect(response.status).toBe(201);
-      expect(response.body.id).toBe('custom-123');
-      expect(response.body.status).toBe('initializing');
+      expect(response.body.data.id).toBe('custom-123');
+      expect(response.body.data.status).toBe('qr_waiting');
+      expect(response.body.data.qrCode).toBe('2@mock-qr-code');
+      expect(response.body.data.qrExpiresAt).toBeDefined();
     });
 
     it('should return 409 for duplicate session ID', async () => {
@@ -54,8 +70,7 @@ describe('Sessions API', () => {
         .send({ sessionId: 'duplicate-123' });
 
       expect(response.status).toBe(409);
-      expect(response.body.error).toBe('Session Already Exists');
-      expect(response.body.message).toContain('duplicate-123');
+      expect(response.body.error).toContain('already exists');
     });
 
     it('should initialize WhatsApp connection', async () => {
@@ -65,6 +80,7 @@ describe('Sessions API', () => {
 
       expect(response.status).toBe(201);
       expect(whatsappService.initializeSession).toHaveBeenCalledWith('test-whatsapp');
+      expect(whatsappService.waitForQRCode).toHaveBeenCalledWith('test-whatsapp');
     });
   });
 
@@ -73,7 +89,8 @@ describe('Sessions API', () => {
       const response = await request(app).get('/sessions');
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data).toEqual([]);
     });
 
     it('should return all sessions', async () => {
@@ -85,8 +102,9 @@ describe('Sessions API', () => {
       const response = await request(app).get('/sessions');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(3);
-      expect(response.body.map((s: any) => s.id)).toEqual(['session-1', 'session-2', 'session-3']);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data).toHaveLength(3);
+      expect(response.body.data.map((s: any) => s.id)).toEqual(['session-1', 'session-2', 'session-3']);
     });
   });
 
@@ -97,17 +115,19 @@ describe('Sessions API', () => {
       const response = await request(app).get('/sessions/test-session');
 
       expect(response.status).toBe(200);
-      expect(response.body.id).toBe('test-session');
-      expect(response.body.status).toBe('initializing');
-      expect(response.body.createdAt).toBeDefined();
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.id).toBe('test-session');
+      expect(response.body.data.status).toBe('qr_waiting');
+      expect(response.body.data.createdAt).toBeDefined();
+      expect(response.body.data.qrCode).toBe('2@mock-qr-code');
+      expect(response.body.data.qrExpiresAt).toBeDefined();
     });
 
     it('should return 404 for non-existent session', async () => {
       const response = await request(app).get('/sessions/non-existent');
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBe('Session Not Found');
-      expect(response.body.message).toContain('non-existent');
+      expect(response.body.error).toContain('not found');
     });
   });
 
@@ -131,7 +151,7 @@ describe('Sessions API', () => {
       const response = await request(app).delete('/sessions/non-existent');
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBe('Session Not Found');
+      expect(response.body.error).toContain('not found');
     });
   });
 });

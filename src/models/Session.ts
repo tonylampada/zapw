@@ -6,4 +6,5 @@ export interface Session {
   createdAt: Date;
   connectedAt?: Date;
   qrCode?: string;
+  qrExpiresAt?: Date;
 }

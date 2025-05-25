@@ -185,12 +185,20 @@ All 11 tasks completed successfully! ZAPW is now a fully production-ready WhatsA
 - ✅ Professional landing page with service information
 - ✅ Interactive test interface for easy API testing and monitoring
 
-## Task 12: Enhanced QR Code Management 🚧
+## Task 12: Enhanced QR Code Management ✅
 - Created task specification for blocking QR generation and auto-refresh
 - Requirements defined:
   - POST /sessions blocks until QR code is generated
   - Add qrExpiresAt field to track expiration (60 seconds)
   - GET /sessions/{id} automatically refreshes expired QR codes
-- Status: PENDING
+- Implementation completed:
+  - Added qrExpiresAt field to Session model and API responses
+  - POST /sessions now blocks up to 30 seconds waiting for QR code
+  - QR expiration time set to 60 seconds from generation
+  - GET /sessions/{id} automatically refreshes expired QR codes
+  - Added waitForQRCode() and refreshQRCode() methods to WhatsAppService
+  - Updated all integration tests to handle new response format
+  - Updated API documentation with new QR management features
+- Status: COMPLETED
 
 Last Updated: 2025-05-25

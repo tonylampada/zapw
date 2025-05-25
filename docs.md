@@ -58,7 +58,7 @@ Check service health status.
 
 ## POST /sessions
 
-Create a new WhatsApp session.
+Create a new WhatsApp session. This endpoint blocks until a QR code is generated (up to 30 seconds).
 
 ### Request Body
 
@@ -72,9 +72,14 @@ Create a new WhatsApp session.
 
 ```json
 {
-  "id": "my-session-123",
-  "status": "initializing",
-  "createdAt": "2025-05-25T00:00:00.000Z"
+  "status": "success",
+  "data": {
+    "id": "my-session-123",
+    "status": "qr_waiting",
+    "createdAt": "2025-05-25T00:00:00.000Z",
+    "qrCode": "2@abc123...",
+    "qrExpiresAt": "2025-05-25T00:01:00.000Z"
+  }
 }
 ```
 
@@ -92,7 +97,7 @@ curl -X POST http://localhost:3000/sessions \
   -d '{"sessionId": "my-whatsapp-bot"}'
 ```
 
-**Note**: After creating a session, monitor logs for QR code or connection status.
+**Note**: The QR code is returned immediately and expires after 60 seconds. Use `GET /sessions/{id}` to refresh expired QR codes.
 
 ## GET /sessions
 
@@ -101,19 +106,25 @@ List all active sessions.
 ### Response (200)
 
 ```json
-[
-  {
-    "id": "session-1",
-    "status": "connected",
-    "createdAt": "2025-05-25T00:00:00.000Z",
-    "phoneNumber": "1234567890"
-  },
-  {
-    "id": "session-2", 
-    "status": "qr_waiting",
-    "createdAt": "2025-05-25T00:01:00.000Z"
-  }
-]
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "session-1",
+      "status": "connected",
+      "createdAt": "2025-05-25T00:00:00.000Z",
+      "phoneNumber": "1234567890",
+      "connectedAt": "2025-05-25T00:01:30.000Z"
+    },
+    {
+      "id": "session-2", 
+      "status": "qr_waiting",
+      "createdAt": "2025-05-25T00:01:00.000Z",
+      "qrCode": "2@abc123...",
+      "qrExpiresAt": "2025-05-25T00:02:00.000Z"
+    }
+  ]
+}
 ```
 
 ### Session Status Values
@@ -126,17 +137,36 @@ List all active sessions.
 
 ## GET /sessions/:sessionId
 
-Get details for a specific session.
+Get details for a specific session. If the session has an expired QR code, this endpoint automatically refreshes it.
 
 ### Response (200)
 
 ```json
 {
-  "id": "my-session-123",
-  "status": "connected",
-  "createdAt": "2025-05-25T00:00:00.000Z",
-  "phoneNumber": "1234567890",
-  "name": "My WhatsApp Account"
+  "status": "success",
+  "data": {
+    "id": "my-session-123",
+    "status": "connected",
+    "createdAt": "2025-05-25T00:00:00.000Z",
+    "phoneNumber": "1234567890",
+    "name": "My WhatsApp Account",
+    "connectedAt": "2025-05-25T00:01:30.000Z"
+  }
+}
+```
+
+**QR Code Refresh**: When status is `qr_waiting` and `qrExpiresAt` is in the past, the endpoint automatically generates a fresh QR code:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "my-session-123",
+    "status": "qr_waiting",
+    "createdAt": "2025-05-25T00:00:00.000Z",
+    "qrCode": "2@newQrCode...",
+    "qrExpiresAt": "2025-05-25T00:03:00.000Z"
+  }
 }
 ```
 

@@ -19,6 +19,7 @@ export interface SessionResponse {
   createdAt: string;
   connectedAt?: string;
   qrCode?: string;
+  qrExpiresAt?: string;
 }
 
 export interface ErrorResponse {
